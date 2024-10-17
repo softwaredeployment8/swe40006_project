@@ -5,8 +5,8 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('aws-access-key')
         AWS_REGION = 'ap-southeast-2'
         SSH_KEY = credentials('mykey')
-        TEST_SERVER_IP = '13.54.199.48' // test 
-        PROD_SERVER_IP = '3.25.115.63' 
+        TEST_SERVER_IP = '52.63.55.56'  // Updated to your new test server IP
+        PROD_SERVER_IP = '3.107.67.30'    // Updated to your new production server IP
     }
 
     stages {
