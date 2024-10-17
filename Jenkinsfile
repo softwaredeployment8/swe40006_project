@@ -13,7 +13,6 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Install required Python packages
                     sh 'pip install -r requirements.txt'
                 }
             }
@@ -22,7 +21,6 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    // Run Python tests using a testing framework
                     sh 'pytest'
                 }
             }
@@ -31,7 +29,7 @@ pipeline {
         stage('Deploy to Test') {
             steps {
                 script {
-                    // Add EC2 host to known_hosts to avoid host key verification errors
+                    // Add EC2 host to known_hosts
                     sh '''
                         mkdir -p ~/.ssh
                         ssh-keyscan -H $TEST_SERVER_IP >> ~/.ssh/known_hosts
@@ -55,7 +53,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Add EC2 host to known_hosts to avoid host key verification errors
+                    // Add EC2 host to known_hosts
                     sh '''
                         mkdir -p ~/.ssh
                         ssh-keyscan -H $PROD_SERVER_IP >> ~/.ssh/known_hosts
