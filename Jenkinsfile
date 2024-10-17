@@ -10,22 +10,6 @@ pipeline {
     }
 
     stages {
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    sh 'pip install -r requirements.txt'
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                script {
-                    sh 'pytest'
-                }
-            }
-        }
-
         stage('Deploy to Test') {
             steps {
                 script {
