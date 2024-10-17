@@ -2,37 +2,71 @@ pipeline {
     agent any 
 
     environment {
-        // Define any environment variables you need, e.g., AWS credentials.
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        AWS_REGION = 'us-west-2'  // Update as needed
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_REGION = 'ap-southeast-2'
+        SSH_KEY = credentials('mykey')
+        TEST_SERVER_IP = '13.54.199.48' 
+        PROD_SERVER_IP = '3.25.115.63' 
     }
 
     stages {
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
                 script {
-                    // Execute your build on AWS build servers
-                    sh 'aws codebuild start-build --project-name MyBuildProject'
+                    // Install required Python packages
+                    sh 'pip install -r requirements.txt'
                 }
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 script {
-                    // Use Jenkins to run your tests
-                    // Example: run unit tests
-                    sh 'npm test'  // or any test command specific to your project
+                    // Run Python tests using a testing framework
+                    sh 'pytest'
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Test') {
             steps {
                 script {
-                    // Deploy to your AWS environment
-                    sh 'aws deploy create-deployment --application-name MyApp --s3-location bucket=mybucket,key=myapp.zip,bundleType=zip'
+                    // Add EC2 host to known_hosts to avoid host key verification errors
+                    sh '''
+                        mkdir -p ~/.ssh
+                        ssh-keyscan -H $TEST_SERVER_IP >> ~/.ssh/known_hosts
+                    '''
+
+                    // Ensure the target directory exists and deploy the application
+                    sh '''
+                        ssh -i $SSH_KEY ec2-user@$TEST_SERVER_IP "mkdir -p /var/www/myapp && rm -rf /var/www/myapp/*"
+                        rsync -avz -e "ssh -i $SSH_KEY" ./ ec2-user@$TEST_SERVER_IP:/var/www/myapp/
+                        ssh -i $SSH_KEY ec2-user@$TEST_SERVER_IP "chown -R ec2-user:ec2-user /var/www/myapp/"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                expression {
+                    return currentBuild.resultIsBetterOrEqualTo('SUCCESS')
+                }
+            }
+            steps {
+                script {
+                    // Add EC2 host to known_hosts to avoid host key verification errors
+                    sh '''
+                        mkdir -p ~/.ssh
+                        ssh-keyscan -H $PROD_SERVER_IP >> ~/.ssh/known_hosts
+                    '''
+
+                    // Ensure the target directory exists and deploy the application
+                    sh '''
+                        ssh -i $SSH_KEY ec2-user@$PROD_SERVER_IP "mkdir -p /var/www/myapp && rm -rf /var/www/myapp/*"
+                        rsync -avz -e "ssh -i $SSH_KEY" ./ ec2-user@$PROD_SERVER_IP:/var/www/myapp/
+                        ssh -i $SSH_KEY ec2-user@$PROD_SERVER_IP "chown -R ec2-user:ec2-user /var/www/myapp/"
+                    '''
                 }
             }
         }
@@ -40,12 +74,10 @@ pipeline {
 
     post {
         success {
-            // Actions to perform on success
-            echo 'Pipeline succeeded!'
+            echo 'Pipeline succeeded! Deployment to Test and Production completed.'
         }
         failure {
-            // Actions to perform on failure
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed! Check logs for details.'
         }
     }
 }

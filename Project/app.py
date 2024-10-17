@@ -8,7 +8,6 @@ todos = [{"task":"Sample Todo", "done":False}]
 def index():
     return render_template('index.html', todos=todos)
 
-
 @app.route("/add", methods=["POST"])
 def add():
     todo = request.form["todo"]
