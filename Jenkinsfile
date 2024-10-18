@@ -18,7 +18,7 @@ pipeline {
             }
         }
         
-        stage('Test') {
+        stage('Deploy to Test') {
             steps {
                 script {
                     sh '''
@@ -30,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Production') {
+        stage('Deploy to Production') {
             when {
                 expression {
                     return currentBuild.resultIsBetterOrEqualTo('SUCCESS')
