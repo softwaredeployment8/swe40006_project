@@ -2,7 +2,7 @@ pipeline {
     agent any 
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')       // test
         AWS_REGION = 'ap-southeast-2'
         SSH_KEY = credentials('mykey')
         TEST_SERVER_IP = '52.63.55.56'
