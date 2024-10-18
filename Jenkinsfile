@@ -5,15 +5,14 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('aws-access-key')
         AWS_REGION = 'ap-southeast-2'
         SSH_KEY = credentials('mykey')
-        TEST_SERVER_IP = '52.63.55.56' 
-        PROD_SERVER_IP = '3.107.67.30'  // test
+        TEST_SERVER_IP = '52.63.55.56'
+        PROD_SERVER_IP = '3.107.67.30'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    // Specify the Git repository and branch here
                     git branch: 'main', url: 'https://github.com/softwaredeployment8/swe40006_project.git'
                 }
             }
@@ -22,9 +21,8 @@ pipeline {
         stage('Deploy to Test') {
             steps {
                 script {
-                    // Ensure the target directory exists and deploy the application
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$TEST_SERVER_IP "mkdir -p ~/myapp && rm -rf ~/myapp/*"
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$TEST_SERVER_IP "mkdir -p ~/myapp && chmod -R 755 ~/myapp && rm -rf ~/myapp/*"
                         scp -o StrictHostKeyChecking=no -i $SSH_KEY -r ./ ec2-user@$TEST_SERVER_IP:~/myapp/
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$TEST_SERVER_IP "chown -R ec2-user:ec2-user ~/myapp/"
                     '''
@@ -40,9 +38,8 @@ pipeline {
             }
             steps {
                 script {
-                    // Ensure the target directory exists and deploy the application
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$PROD_SERVER_IP "mkdir -p ~/myapp && rm -rf ~/myapp/*"
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$PROD_SERVER_IP "mkdir -p ~/myapp && chmod -R 755 ~/myapp && rm -rf ~/myapp/*"
                         scp -o StrictHostKeyChecking=no -i $SSH_KEY -r ./ ec2-user@$PROD_SERVER_IP:~/myapp/
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@$PROD_SERVER_IP "chown -R ec2-user:ec2-user ~/myapp/"
                     '''
